@@ -1,0 +1,14 @@
+{
+  "listProducts": [
+    {
+      "id": 1,
+      "designation": "banana",
+      "price": 1.1
+    },
+    {
+      "id": 2,
+      "designation": "kokos",
+      "price": 2.5
+    }
+  ]
+}
