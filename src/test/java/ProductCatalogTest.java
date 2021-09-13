@@ -3,7 +3,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,11 +12,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ProductCatalogTest {
 
-    Product product1 = new Product("banana", 1.1);
-    Product product2 = new Product("kokos", 2.5);
+    static final String PATH_TO_TEST_FILE_BEFORE_ALL_BUILD_FROM_STRING = "testFileBeforeAllBuildFromString";
+
+    // jak zmieniam na static to instancja pozostaje ta sama dla każdego testu,a jak nie static to buduje się nowa instacja
+    final ProductCatalog testProductCatalog = new ProductCatalog();
+
+    static final Product product1 = new Product("banana", 1.1);
+    static final Product product2 = new Product("kokos", 2.2);
+
 
     @BeforeAll
-    static void saveFile() {
+    static void buildTestFile() {
         String fileContent = "{\n" +
                 "  \"listProducts\": [\n" +
                 "    {\n" +
@@ -28,13 +33,13 @@ class ProductCatalogTest {
                 "    {\n" +
                 "      \"id\": 2,\n" +
                 "      \"designation\": \"kokos\",\n" +
-                "      \"price\": 2.5\n" +
+                "      \"price\": 2.2\n" +
                 "    }\n" +
                 "  ]\n" +
                 "} ";
 
         try {
-            FileWriter writer = new FileWriter("testFile");
+            FileWriter writer = new FileWriter(PATH_TO_TEST_FILE_BEFORE_ALL_BUILD_FROM_STRING);
             writer.write(fileContent);
             writer.flush();
         } catch (IOException e) {
@@ -44,58 +49,54 @@ class ProductCatalogTest {
 
     @AfterAll
     public static void deleteTestFile() {
-        File file = new File("testFile");
-        file.delete();
+        new File(PATH_TO_TEST_FILE_BEFORE_ALL_BUILD_FROM_STRING).delete();
     }
 
     @Test
     void testAddProductShouldReturnTrueIfProductAdd() {
-        ProductCatalog productCatalog = new ProductCatalog();
-        assertTrue(productCatalog.addProduct(product1));
+        assertTrue(testProductCatalog.addProduct(product1));
     }
 
     @Test
     void testAddProductShouldReturnFalseIfProductNull() {
-        ProductCatalog productCatalog = new ProductCatalog();
-        assertFalse(productCatalog.addProduct(null));
+        assertFalse(testProductCatalog.addProduct(null));
     }
 
     @Test
     void testSaveShouldReturnEqualFiles() {
-        String path = "thisTestFile";
-        ProductCatalog testProductCatalog = new ProductCatalog();
-        testProductCatalog.addProduct(product1);
-        testProductCatalog.addProduct(product2);
-        try {
-            testProductCatalog.save(testProductCatalog, path);
+        String path = "thisTestFileSaveMethodTest";
+        addTwoProductsToTestProductCatalog();
 
-            String file1ToString = new String(Files.readAllBytes(Paths.get(path))).trim();
-            String file2ToString = new String(Files.readAllBytes(Paths.get("testFile"))).trim();
+        try {
+            testProductCatalog.save(path);
+
+            String file1ToString = new String(Files.readAllBytes(Paths.get(PATH_TO_TEST_FILE_BEFORE_ALL_BUILD_FROM_STRING))).trim();
+            String file2ToString = new String(Files.readAllBytes(Paths.get(path))).trim();
+
             assertEquals(file1ToString, file2ToString);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        File thisTestFile = new File(path);
-        thisTestFile.delete();
+        new File(path).delete();
     }
 
     @Test
     void testSaveShouldThrowIOExceptionIfEmptyPath() {
-        ProductCatalog testProductCatalog = new ProductCatalog();
-
-        assertThrows(IOException.class, () -> testProductCatalog.save(testProductCatalog, ""));
+        assertThrows(IOException.class, () -> testProductCatalog.save(""));
     }
 
     @Test
-    void testLoadShouldReturnProductCatalogueFromTestFile() throws FileNotFoundException {
-        Product product3 = new Product("banana", 1.1);
-        Product product4 = new Product("kokos", 2.5);
-        ProductCatalog productCatalog = new ProductCatalog();
-        productCatalog.addProduct(product1);
-        productCatalog.addProduct(product2);
+    void testSaveShouldThrowNPExceptionIfPathNull() {
+        assertThrows(NullPointerException.class, () -> testProductCatalog.save(null));
+    }
 
-        assertEquals(ProductCatalog.load("testFile"), productCatalog);
+    @Test
+    void testLoadShouldReturnProductCatalogueFromTestFile() {
+        addTwoProductsToTestProductCatalog();
+
+        assertEquals(ProductCatalog.load(PATH_TO_TEST_FILE_BEFORE_ALL_BUILD_FROM_STRING), testProductCatalog);
     }
 
     @Test
@@ -106,5 +107,10 @@ class ProductCatalogTest {
     @Test
     void testLoadShouldReturnNPExceptionIfPathNull() {
         assertThrows(NullPointerException.class, () -> ProductCatalog.load(null));
+    }
+
+    private void addTwoProductsToTestProductCatalog()  {
+        testProductCatalog.addProduct(product1);
+        testProductCatalog.addProduct(product2);
     }
 }

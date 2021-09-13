@@ -38,25 +38,23 @@ public class ProductCatalog {
         return false;
     }
 
-    public void save(ProductCatalog productCatalog, String path) throws IOException {
+    public void save(String path) throws IOException {
         FileWriter writer = new FileWriter(path);
-        gson.toJson(productCatalog, writer);
+        gson.toJson(this, writer);
         writer.flush();
     }
 
     public static ProductCatalog load(String path) {
-        ProductCatalog loadedFile = new ProductCatalog();
+        ProductCatalog pcFromFile = new ProductCatalog();
         try {
             FileReader reader = new FileReader(path);
-            Type productCatalogType = new TypeToken<ProductCatalog>() {
-            }.getType();
-            loadedFile = gson.fromJson(reader, productCatalogType);
-            System.out.println(loadedFile.listProducts);
+            Type productCatalogType = new TypeToken<ProductCatalog>() {}.getType();
+            pcFromFile = gson.fromJson(reader, productCatalogType);
 
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
             return null;
         }
-        return loadedFile;
+        return pcFromFile;
     }
 }
